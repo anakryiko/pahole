@@ -1115,7 +1115,7 @@ static enum load_steal_kind pahole_stealer(struct cu *cu,
 
 	if (btf_encode) {
 		cu__encode_btf(cu, global_verbose);
-		goto dump_and_stop;
+		return LSK__KEEPIT;
 	}
 
 	if (ctf_encode) {
@@ -1258,12 +1258,28 @@ int main(int argc, char *argv[])
 		goto out_dwarves_exit;
 	}
 
+	if (btf_encode) {
+		err = btf_encoder__init();
+		if (err) {
+			fputs("pahole: failed to initialize btf encoder\n", stderr);
+			goto out_btf_encoder_exit;
+		}
+	}
+
 	conf_load.steal = pahole_stealer;
 
 	err = cus__load_files(cus, &conf_load, argv + remaining);
 	if (err != 0) {
 		cus__fprintf_load_files_err(cus, "pahole", argv + remaining, err, stderr);
 		goto out_cus_delete;
+	}
+
+	if (btf_encode) {
+		err = btf_encoder__exit(EXIT_SUCCESS);
+		if (err) {
+			fputs("pahole: failed to finalize btf encoder\n", stderr);
+			goto out_cus_delete;
+		}
 	}
 
 	if (stats_formatter != NULL)
@@ -1274,6 +1290,8 @@ out_cus_delete:
 	cus__delete(cus);
 	structures__delete();
 #endif
+out_btf_encoder_exit:
+	btf_encoder__exit(rc);
 out_dwarves_exit:
 #ifdef DEBUG_CHECK_LEAKS
 	dwarves__exit();
