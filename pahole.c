@@ -1171,7 +1171,8 @@ static enum load_steal_kind pahole_stealer(struct cu *cu,
 
 		class__find_holes(tag__class(class));
 		if (reorganize)
-			do_reorg(class, cu);
+
+      do_reorg(class, cu);
 		else if (find_containers)
 			print_containers(cu, class_id, 0);
 		else if (find_pointers_in_structs)
