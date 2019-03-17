@@ -2243,6 +2243,12 @@ static int cus__load_debug_types(struct cus *cus, struct conf_load *conf,
 			cu->extra_dbg_info = conf ? conf->extra_dbg_info : 0;
 			cu->has_addr_info = conf ? conf->get_addr_info : 0;
 
+			GElf_Ehdr ehdr;
+			if (gelf_getehdr(elf, &ehdr) == NULL) {
+				return DWARF_CB_ABORT;
+			}
+			cu->little_endian = ehdr.e_ident[EI_DATA] == ELFDATA2LSB;
+
 			dwarf_cu__init(dcup);
 			dcup->cu = cu;
 			/* Funny hack.  */
@@ -2324,6 +2330,12 @@ static int cus__load_module(struct cus *cus, struct conf_load *conf,
 		cu->extra_dbg_info = conf ? conf->extra_dbg_info : 0;
 		cu->has_addr_info = conf ? conf->get_addr_info : 0;
 
+		GElf_Ehdr ehdr;
+		if (gelf_getehdr(elf, &ehdr) == NULL) {
+			return DWARF_CB_ABORT;
+		}
+		cu->little_endian = ehdr.e_ident[EI_DATA] == ELFDATA2LSB;
+		
 		struct dwarf_cu dcu;
 
 		dwarf_cu__init(&dcu);
